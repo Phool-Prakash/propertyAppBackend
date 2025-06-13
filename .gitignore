@@ -1,0 +1,48 @@
+
+go.sum
+go.work
+go.work.sum
+
+
+
+# IDE/editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+
+# Output of `go build`
+/bin/
+/build/
+/dist/
+
+
+
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, coverage, and results
+*.test
+*.out
+*.coverprofile
+*.cov
+*.log
+
+
+# Dependency directories (if using vendoring)
+/vendor/
+
+
+# Environment files
+.env
+.env.*
+
+
+# OS generated files
+.DS_Store
+Thumbs.db
