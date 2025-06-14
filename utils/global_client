@@ -1,0 +1,24 @@
+package utils
+
+import (
+    "sync"
+    "go.mongodb.org/mongo-driver/mongo"
+)
+
+var once sync.Once
+var CacheClient *mongo.Client
+var CachedConfig *config.Config
+
+func GetCacheClient(client *mongo.Client) *mongo.Client {
+    once.Do(func() {
+        CacheClient = client
+    })
+    return CacheClient
+}
+
+func GetCacheConfig(cfg *config.Config) *config.Config {
+    once.Do(func(){
+        CachedConfig =cfg
+    })
+    return CachedConfig
+}

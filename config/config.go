@@ -13,15 +13,15 @@ import (
 
 //this is for batter logging
 var once sync.Once
-var cachedConfig *Config
+var cachedCfg *Config
 
 //Config Structure (this is encapsulate the important settings)
 type Config struct {
 	Port                   string
 	MongoDBURI             string
-	JWTSecret              string // For Access Token
-	RefreshTokenSecret     string // NEW: For Refresh Token
-	RefreshTokenLifetimeHours int // NEW: Refresh Token lifetime
+	JWTSecret              string 
+	RefreshTokenSecret     string 
+	RefreshTokenLifetimeHours int 
 	TwilioAccountSID       string
 	TwilioAuthToken        string
 	TwilioPhoneNumber      string
@@ -37,7 +37,7 @@ func LoadConfig() *Config {
 		log.Println("Error loading .env file, assuming environment variables are set")
 	}
 
-	cachedConfig =  &Config{
+	cachedCfg =  &Config{
 		Port:                   getEnv("PORT", ":8080"),
 		MongoDBURI:             getEnv("MONGODB_URI", "mongodb://localhost:27017/propertyAppDatabase"),
 		JWTSecret:              getSecureEnv("JWT_SECRET"),
@@ -49,7 +49,7 @@ func LoadConfig() *Config {
 		OTPLifetimeMinutes:     parseIntEnv("OTP_LIFETIME_MINUTES",2),
 	}
 	})
-	return cachedConfig
+	return cachedCfg
 }
 
 //Secure environment variable retrieval
