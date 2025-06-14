@@ -22,7 +22,7 @@
 // 		_, err := mongo.Connect(Ctx,clientOptions)
 // 	if err != nil {
 // 		log.Fatal("Database connection failed:",err)
-// 	} 
+// 	}
 // 	})
 // 	return cachedClient, err
 // }
@@ -41,17 +41,17 @@
 // 	return client.Database("propertyAppDatabase").Collection("refresh_tokens")
 // }
 
-
-
 package database
 
 import (
-    "context"
-    "log"
-    "sync"
+	"context"
+	"fmt"
+	"log"
+	"sync"
+	"time"
 
-    "go.mongodb.org/mongo-driver/mongo"
-    "go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var once sync.Once
@@ -62,39 +62,49 @@ var Ctx = context.Background()
 func ConnectDB(uri string) (*mongo.Client, error) {
     var err error
     once.Do(func() {
-        clientOptions := options.Client().ApplyURI(uri).SetMaxPoolSize(50)
+        clientOptions := options.Client().ApplyURI(uri).SetMaxPoolSize(50).SetConnectTimeout(10 * time.Second)
 
         cachedClient, err = mongo.Connect(Ctx, clientOptions)
         if err != nil {
-            log.Fatal("Database connection failed:", err)
+            log.Println("Database connection failed:", err)
+			err = fmt.Errorf("Database connection failed: %w", err)
         }
     })
 
     return cachedClient, err
 }
 
+// Retrieve shared DB client instance
+func GetCachedClient() *mongo.Client {
+    return cachedClient
+}
+
 // Get specific collections
 
 //GetUserCollection returns the users collection
-func GetUserCollection(client *mongo.Client) *mongo.Collection {
+func GetUserCollection() *mongo.Collection {
 	if cachedClient == nil {
 		log.Println("Database client not initialized!")
+		return nil
 	}
-    return client.Database("propertyAppDatabase").Collection("users")
+    return cachedClient.Database("propertyAppDatabase").Collection("users")
 }
 
-func GetOTPCollection(client *mongo.Client) *mongo.Collection {
+//GetOTPCollection returns the OTPs collection
+func GetOTPCollection() *mongo.Collection {
 	if cachedClient == nil {
 		log.Println("Database client not initialized!")
+		return nil
 
 	}
-    return client.Database("propertyAppDatabase").Collection("otps")
+    return cachedClient.Database("propertyAppDatabase").Collection("otps")
 }
 
-func GetRefreshTokenCollection(client *mongo.Client) *mongo.Collection {
+//GetRefreshTokenCollection returns the refresh token collection
+func GetRefreshTokenCollection() *mongo.Collection {
 	if cachedClient == nil {
 		log.Println("Database client not initialized!")
-
+		return nil
 	}
-    return client.Database("propertyAppDatabase").Collection("refresh_tokens")
+    return cachedClient.Database("propertyAppDatabase").Collection("refresh_tokens")
 }

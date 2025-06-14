@@ -6,10 +6,10 @@ import (
 	"os"
 	"strconv"
 	"sync"
-    "github.com/sirupsen/logrus"
-	"github.com/joho/godotenv"
-)
 
+	"github.com/joho/godotenv"
+	"github.com/sirupsen/logrus"
+)
 
 //this is for batter logging
 var once sync.Once
@@ -35,6 +35,7 @@ func LoadConfig() *Config {
 		err := godotenv.Load()
 	if err != nil {
 		log.Println("Error loading .env file, assuming environment variables are set")
+		logrus.Warn("Error loading .env file, assuming environment variables are set")
 	}
 
 	cachedCfg =  &Config{
@@ -49,6 +50,11 @@ func LoadConfig() *Config {
 		OTPLifetimeMinutes:     parseIntEnv("OTP_LIFETIME_MINUTES",2),
 	}
 	})
+	return cachedCfg
+}
+
+//Retrive cached Config instance
+func GetCachedConfig() *Config {
 	return cachedCfg
 }
 
@@ -82,3 +88,4 @@ func parseIntEnv(key string, defaultValue int) int {
 	}
 	return defaultValue
 }
+

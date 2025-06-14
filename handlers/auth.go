@@ -19,9 +19,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-
-
-
 // Request/Response Structs (Remains same)
 type SendOTPRequest struct {
 	Name        string `json:"name,omitempty"`
@@ -37,8 +34,8 @@ type VerifyOTPRequest struct {
 // AuthResponse will now include RefreshToken
 type AuthResponse struct {
 	Message      string      `json:"message"`
-	AccessToken  string      `json:"accessToken"`   // Changed to AccessToken
-	RefreshToken string      `json:"refreshToken"`  // NEW
+	AccessToken  string      `json:"accessToken"`  // Changed to AccessToken
+	RefreshToken string      `json:"refreshToken"` // NEW
 	User         models.User `json:"user"`
 }
 
@@ -60,7 +57,7 @@ func SendOTP(client *mongo.Client) http.HandlerFunc {
 		}
 
 		cfg := config.LoadConfig()
-		userCollection := database.GetUserCollection(client)
+		userCollection := database.GetUserCollection()
 
 		var existingUser models.User
 		err = userCollection.FindOne(database.Ctx, bson.M{"phoneNumber": req.PhoneNumber}).Decode(&existingUser)
@@ -82,7 +79,7 @@ func SendOTP(client *mongo.Client) http.HandlerFunc {
 			return
 		}
 
-		otpCollection := database.GetOTPCollection(client)
+		otpCollection := database.GetOTPCollection()
 
 		expiresAt := time.Now().Add(time.Duration(cfg.OTPLifetimeMinutes) * time.Minute)
 		otpRecord := models.OTPRecord{
@@ -121,7 +118,6 @@ func SendOTP(client *mongo.Client) http.HandlerFunc {
 	}
 }
 
-
 // VerifyOTP handles verifying the OTP for a phone number
 // This API also handles user registration/login based on OTP verification result.
 func VerifyOTP(client *mongo.Client) http.HandlerFunc {
@@ -139,9 +135,9 @@ func VerifyOTP(client *mongo.Client) http.HandlerFunc {
 		}
 
 		cfg := config.LoadConfig()
-		otpCollection := database.GetOTPCollection(client)
-		userCollection := database.GetUserCollection(client)
-		refreshTokenCollection := database.GetRefreshTokenCollection(client) // Get refresh token collection
+		otpCollection := database.GetOTPCollection()
+		userCollection := database.GetUserCollection()
+		refreshTokenCollection := database.GetRefreshTokenCollection() // Get refresh token collection
 
 		var storedOTP models.OTPRecord
 		err = otpCollection.FindOne(database.Ctx, bson.M{"phoneNumber": req.PhoneNumber}).Decode(&storedOTP)
@@ -258,17 +254,15 @@ func VerifyOTP(client *mongo.Client) http.HandlerFunc {
 		}
 		log.Printf("Refresh Token for user %s stored successfully in DB.", user.ID.Hex())
 
-
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(AuthResponse{
-			Message:      "OTP verified and user logged in/registered successfully",
+			Message:      "User successfully verified",
 			AccessToken:  accessToken,
 			RefreshToken: refreshToken,
 			User:         user,
 		})
 	}
 }
-
 
 // GetUserProfile is an example of a protected route
 func GetUserProfile(client *mongo.Client) http.HandlerFunc {
@@ -284,9 +278,8 @@ func GetUserProfile(client *mongo.Client) http.HandlerFunc {
 			return
 		}
 
-
 		config.LoadConfig()
-		userCollection := database.GetUserCollection(client)
+		userCollection := database.GetUserCollection()
 
 		var user models.User
 		err := userCollection.FindOne(database.Ctx, bson.M{"_id": userID}).Decode(&user)

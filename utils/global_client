@@ -5,20 +5,36 @@ import (
     "go.mongodb.org/mongo-driver/mongo"
 )
 
-var once sync.Once
-var CacheClient *mongo.Client
-var CachedConfig *config.Config
+var onceClient sync.Once
+var onceConfig sync.Once
+var cachedClient *mongo.Client
+var cachedConfig *config.Config
 
-func GetCacheClient(client *mongo.Client) *mongo.Client {
-    once.Do(func() {
-        CacheClient = client
+
+//Store share DB client instance
+func SetCachedClient(client *mongo.Client) {
+    onceClient.Do(func() {
+        cachedClient = client
     })
-    return CacheClient
 }
 
-func GetCacheConfig(cfg *config.Config) *config.Config {
-    once.Do(func(){
-        CachedConfig =cfg
-    })
-    return CachedConfig
+//Retrive Shared DB client instance
+
+func GetChachedClient() *mongo.Client{
+return cachedClient
 }
+
+
+//Store share Config instance
+func SetCachedConfig(cfg *config.Config) {
+    onceConfig.Do(func(){
+        cachedConfig = cfg
+    })
+}
+
+//Retrieve Shared Config instance 
+func GetCachedConfig() *config.Config {
+    return cachedConfig
+}
+
+
