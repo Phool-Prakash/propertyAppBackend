@@ -13,10 +13,11 @@ type User struct {
 	CreatedAt time.Time `json:"createdAt,omitempty" bson:"createdAt,omitempty"`
 }
 
-// type OTPRecord struct {
-// 	ID          primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-// 	PhoneNumber string             `json:"phoneNumber" bson:"phoneNumber"`
-// 	OTP         string             `json:"otp" bson:"otp"`
-// 	ExpiresAt   time.Time          `json:"expiresAt" bson:"expiresAt"`
-// 	CreatedAt   time.Time          `json:"createdAt" bson:"createdAt"`
-// }
+//OTPRecord
+type OTPRecord struct {
+	ID          primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	PhoneNumber string             `json:"phoneNumber" bson:"phoneNumber"`
+	OTP         string             `json:"otp" bson:"otp"`
+	ExpiresAt   time.Time          `json:"expiresAt" bson:"expiresAt"`
+	CreatedAt   time.Time          `json:"createdAt" bson:"createdAt"`
+}

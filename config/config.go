@@ -2,7 +2,6 @@
 package config
 
 import (
-	"log"
 	"os"
 	"strconv"
 	"sync"
@@ -32,9 +31,7 @@ type Config struct {
 //LoadConfig func
 func LoadConfig() *Config {
 	once.Do(func ()  {
-		err := godotenv.Load()
-	if err != nil {
-		log.Println("Error loading .env file, assuming environment variables are set")
+	if  err := godotenv.Load(); err != nil{
 		logrus.Warn("Error loading .env file, assuming environment variables are set")
 	}
 
@@ -49,12 +46,16 @@ func LoadConfig() *Config {
 		TwilioPhoneNumber:      getSecureEnv("TWILIO_PHONE_NUMBER"),
 		OTPLifetimeMinutes:     parseIntEnv("OTP_LIFETIME_MINUTES",2),
 	}
+	logrus.Info("Configuration successfully loaded")
 	})
 	return cachedCfg
 }
 
 //Retrive cached Config instance
 func GetCachedConfig() *Config {
+	if cachedCfg == nil {
+		logrus.Fatal("Configuration not initialized! Call LoadConfig() first")
+	}
 	return cachedCfg
 }
 
