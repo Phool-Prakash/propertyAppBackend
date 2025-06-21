@@ -8,12 +8,29 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+var JWTSecret = []byte("Min-Admin@123")
+
+// GenerateJWT generates a JWT token for Admin, Mini-Admin, or User
+func GenerateJWT(userID primitive.ObjectID, role string) (string, error) {
+    claims := jwt.MapClaims{
+        "user_id": userID.Hex(),
+        "role":    role,
+        "exp":     jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+    }
+
+    token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+    tokenString, err := token.SignedString(JWTSecret)
+    if err != nil {
+        return "", fmt.Errorf("failed to sign JWT token: %w", err)
+    }
+    return tokenString, nil
+}
 // GenerateAccessToken generates a new short-lived JWT Access Token
 func GenerateAccessToken(userID primitive.ObjectID, secret string) (string, error) {
 	claims := jwt.MapClaims{
 		"authorized": true,
 		"user_id":    userID.Hex(),
-		"exp":        jwt.NewNumericDate(time.Now().Add(time.Hour * 1)), // Access Token valid for 1 hour
+		"exp":        jwt.NewNumericDate(time.Now().Add(time.Hour * 1)),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

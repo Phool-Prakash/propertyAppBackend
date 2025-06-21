@@ -1,0 +1,40 @@
+package utils
+
+import (
+    "sync"
+    "go.mongodb.org/mongo-driver/mongo"
+)
+
+var onceClient sync.Once
+var onceConfig sync.Once
+var cachedClient *mongo.Client
+var cachedConfig *config.Config
+
+
+//Store share DB client instance
+func SetCachedClient(client *mongo.Client) {
+    onceClient.Do(func() {
+        cachedClient = client
+    })
+}
+
+//Retrive Shared DB client instance
+
+func GetChachedClient() *mongo.Client{
+return cachedClient
+}
+
+
+//Store share Config instance
+func SetCachedConfig(cfg *config.Config) {
+    onceConfig.Do(func(){
+        cachedConfig = cfg
+    })
+}
+
+//Retrieve Shared Config instance 
+func GetCachedConfig() *config.Config {
+    return cachedConfig
+}
+
+

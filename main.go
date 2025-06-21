@@ -5,10 +5,12 @@ import (
 	database "PropertyAppBackend/db"
 	"PropertyAppBackend/handlers"
 	"PropertyAppBackend/middleware"
+	"PropertyAppBackend/utils"
 	"context"
 	"fmt"
 	"log"
 	"net/http"
+
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -17,9 +19,11 @@ import (
 
 
 func main() {
+	hashedPassword, _ := utils.HashPassword("DefaultAdmin@123")
+	 fmt.Println("Admin Hashed Password:", hashedPassword)
+	config.LoadConfig()
 	// Load configuration
-	cfg := config.LoadConfig()
-
+	cfg := config.GetCachedConfig()
 	// Connect to MongoDB once at startup
 	client, err := database.ConnectDB(cfg.MongoDBURI)
 	if err != nil {
@@ -35,25 +39,37 @@ func main() {
 	}()
 	fmt.Println("Connected to MongoDB!")
 
+	database.SeedAdminUser()
+
 	// Ensure unique index on phoneNumber for users collection
-	userCollection := database.GetUserCollection(client)
-	indexModel := mongo.IndexModel{
-		Keys:    bson.D{{"phoneNumber", 1}},       // Index on phoneNumber field
-		Options: options.Index().SetUnique(true),  // Make it unique
-	}
-	_, err = userCollection.Indexes().CreateOne(database.Ctx, indexModel)
+	userCollection := database.GetUserCollection()
+indexes := []mongo.IndexModel{
+    {Keys: bson.D{{Key: "phoneNumber", Value: 1}}, Options: options.Index().SetUnique(true)}, // ✅ Unique Phone for Users
+    {Keys: bson.D{{Key: "username", Value: 1}}, Options: options.Index().SetUnique(true)},   // ✅ Unique Username for Admin & Mini-Admin
+}
+	_, err = userCollection.Indexes().CreateMany(database.Ctx, indexes)
 	if err != nil {
 		// Log error if index creation fails, could be due to existing duplicate data
 		log.Printf("Warning: Failed to create unique index for users collection, or index already exists: %v", err)
 	} else {
-		fmt.Println("Unique index ensured on users.phoneNumber")
+		fmt.Println("Unique indexes ensured: phoneNumber (Users) & username (Admins)")
 	}
 
 	r := mux.NewRouter()
 
 	// Authentication routes - Pass the MongoDB client to handlers
-	r.HandleFunc("/send-otp", handlers.SendOTP(client)).Methods("POST")
-	r.HandleFunc("/verify-otp", handlers.VerifyOTP(client)).Methods("POST")
+	r.HandleFunc("/send-otp", handlers.SendOTP()).Methods("POST")
+	r.HandleFunc("/verify-otp", handlers.VerifyOTP()).Methods("POST")
+
+
+// **Admin Creates Mini-Admin**
+r.HandleFunc("/admin/create-mini-admin", handlers.CreateMiniAdmin()).Methods("POST")
+
+// **Admin Login**
+r.HandleFunc("/admin/login", handlers.AdminLogin()).Methods("POST")
+r.HandleFunc("/mini-admin/login", handlers.MiniAdminLogin()).Methods("POST")
+
+
 
 	// Protected routes (require authentication via JWT)
 	protectedRouter := r.PathPrefix("/api").Subrouter()
@@ -66,47 +82,3 @@ func main() {
 }
 
 
-// func main() {
-// 	// Load configuration
-// 	cfg := config.LoadConfig()
-
-// 	// Connect to MongoDB
-// 	client, err := database.ConnectDB(cfg.MongoDBURI)
-// 	if err != nil {
-// 		log.Fatalf("MongoDB connection error: %v", err)
-// 	}
-// 	defer func() {
-// 		if err = client.Disconnect(database.Ctx); err != nil {
-// 			log.Fatal(err)
-// 		}
-// 	}()
-// 	fmt.Println("Connected to MongoDB!")
-
-// 	// Ensure unique index on phoneNumber for users collection
-// 	userCollection := database.GetUserCollection(client)
-// 	indexModel := mongo.IndexModel{
-// 		Keys:    bson.D{{"phoneNumber", 1}},      // Index on phoneNumber field
-// 		Options: options.Index().SetUnique(true), // Make it unique
-// 	}
-// 	_, err = userCollection.Indexes().CreateOne(database.Ctx, indexModel)
-// 	if err != nil {
-// 		// Log error if index creation fails, could be due to existing duplicate data
-// 		log.Printf("Warning: Failed to create unique index for users collection, or index already exists: %v", err)
-// 	} else {
-// 		fmt.Println("Unique index ensured on users.phoneNumber")
-// 	}
-
-// 	r := mux.NewRouter()
-
-// 	// Authentication routes
-// 	r.HandleFunc("/send-otp", handlers.SendOTP).Methods("POST")
-// 	r.HandleFunc("/verify-otp", handlers.VerifyOTP).Methods("POST")
-
-// 	// Protected routes (require authentication via JWT)
-// 	protectedRouter := r.PathPrefix("/api").Subrouter()
-// 	protectedRouter.Use(middleware.AuthMiddleware)
-// 	protectedRouter.HandleFunc("/profile", handlers.GetUserProfile).Methods("GET")
-
-// 	fmt.Printf("Server listening on %s\n", cfg.Port)
-// 	log.Fatal(http.ListenAndServe(cfg.Port, r))
-// }
