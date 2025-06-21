@@ -59,7 +59,7 @@ func GetCachedConfig() *Config {
 	return cachedCfg
 }
 
-//Secure environment variable retrieval
+// Secure environment variable retrieval
 func getSecureEnv(key string) string {
 	if value, exists := os.LookupEnv(key); exists {
 		return value
